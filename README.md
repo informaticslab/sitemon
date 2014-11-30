@@ -6,7 +6,7 @@ and reports any status changes via email.
 
 ## Goals
 To provide a timely reporting system that alerts individuals when a server goes down or 
-the temperature is the server room is too high.
+the temperature in the server room is too high.
 
 ##Requirements
 * Python 2.7
