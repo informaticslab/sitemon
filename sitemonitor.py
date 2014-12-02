@@ -18,9 +18,8 @@ import logging
 port = 25
 smtp_server = SMTP('smtp.phiresearchlab.org')
 from_address = 'informaticslab@phiresearchlab.org'
-to_addresses = ['gsledbetter@gmail.com']
-#to_addresses = ['gsledbetter@gmail.com', 'tgsavel@gmail.com', 'Hkr3@cdc.gov', 'pwhitebe@gmail.com',
-#            'informaticslab@cdc.gov','ladale@gmail.com']
+to_addresses = ['gsledbetter@gmail.com', 'tgsavel@gmail.com', 'Hkr3@cdc.gov', 'pwhitebe@gmail.com',
+                'informaticslab@cdc.gov','ladale@gmail.com']
 
 # list of URLs to monitor
 urls = ['www.phiresearchlab.org',
