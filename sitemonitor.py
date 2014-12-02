@@ -78,7 +78,9 @@ class DailyEmail(Email):
         self.add_text_to_body(status_message)
 
     def add_temp(self, temp):
-        temp_text = "\nThe current server room temperature is %d." % temp
+        temp_string = get_temp_string(temp)
+        temp_text = "\nThe current server room temperature is %s" % temp_string
+        temp_text += "\n\nThe APC internal battery temperature is typically 4 degrees warmer than server room air temperature.\n"
         self.add_text_to_body(temp_text)
 
 
@@ -86,11 +88,19 @@ class TemperatureAlertEmail(Email):
 
     def __init__(self):
         Email.__init__(self)
-        self.intro = 'Within the last five minutes the temperature in the server room has changed as stated below:'
-        self.subject = 'IIU SiteMonitor Server Room Temperature Alert'
+        self.intro = 'The temperature of the APC internal battery in the server room has changed by 1 degree or more as stated below:'
+        self.subject = 'IIU SiteMonitor Server Room APC Internal Battery Temperature Alert'
 
     def add_temp_change(self, new_temp, old_temp):
-        temp_message = "Current temperature = %s F, \nPrevious temperature = %s F" % (new_temp, old_temp)
+        new_temp_string = get_temp_string(new_temp)
+        if old_temp is not None:
+            old_temp_string = get_temp_string(old_temp)
+            temp_message = "Current temperature = %s F, \nPrevious temperature = %s F" % (new_temp_string, old_temp_string)
+        else:
+            temp_message = "Current temperature = %s F, \nPrevious temperature is not available." % (new_temp_string)
+
+        temp_message += "\n\nThe APC internal battery temperature is typically 4 degrees warmer than server room air temperature.\n"
+
         self.add_text_to_body(temp_message)
 
 
@@ -207,7 +217,7 @@ def get_apc_battery_temp():
     apc_nmc = 'apc1.lab.local'
     version = '2c'
     community = 'public'
-    battery_oid = '1.3.6.1.4.1.318.1.1.1.2.2.2.0'
+    battery_oid = '1.3.6.1.4.1.318.1.1.1.2.3.2.0'  # OID for high precision temp 28.2 will read as 282
 
     shell_command = snmp_get + ' -v ' + version + ' -c ' + community + ' -Ov ' + apc_nmc + ' ' + battery_oid
 
@@ -215,10 +225,16 @@ def get_apc_battery_temp():
     print("shell_command_output = " + shell_command_output[0])
     if shell_command_output[0].startswith("Gauge32"):
         temp_string = shell_command_output[1]
-        temp_celsius = int(temp_string)
+
+        # divide high precision temp by 10 since 28.2 is stored as 282
+        temp_celsius = int(temp_string) / 10.0
         temp_fahrenheit = 9.0/5.0 * temp_celsius + 32
-        print "APC Battery Temp = %d Fahrenheit, %d Celsius" % (temp_fahrenheit, temp_celsius)
+        print "APC Battery Temp = %.1f Fahrenheit, %.1f Celsius" % (temp_fahrenheit, temp_celsius)
     return temp_fahrenheit
+
+
+def get_temp_string(temp_float):
+    return "%.1f" % temp_float
 
 
 def add_temp_to_daily_report(daily_email):
@@ -232,20 +248,25 @@ def add_temp_to_daily_report(daily_email):
 def compare_temp_status(prev_results, temp_alert_email):
     temp_key = 'temperature'
     temp = get_apc_battery_temp()
-    temp_value = "%d" % temp
 
     # create dictionary for temperature if one doesn't exist (first time temp was checked)
     if temp_key not in prev_results:
         prev_results[temp_key] = {}
         # add_status_to_email(friendly_status)
-        temp_alert_email.add_temp_change(temp_value, None)
+        temp_alert_email.add_temp_change(temp, None)
+        prev_results[temp_key]['value'] = temp
 
-    elif temp_key in prev_results and prev_results[temp_key]['value'] != temp_value:
-        temp_alert_email.add_temp_change(temp_value, prev_results[temp_key]['value'])
+    else:
+        previous_stored_temp = prev_results[temp_key]['value']
+        if (temp > previous_stored_temp + 1.0) or (temp < previous_stored_temp - 1.0):
+            temp_alert_email.add_temp_change(temp, prev_results[temp_key]['value'])
 
-    # Save results for later pickling and utility use
-    prev_results[temp_key]['value'] = temp_value
+            # Save results for later pickling and utility use
+
+            prev_results[temp_key]['value'] = temp
+
     return
+
 
 def main(argv):
 
@@ -264,7 +285,7 @@ def main(argv):
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'sitemonitor.py -s'
+            print 'sitemonitor.py -d'
             sys.exit()
         elif opt in '-d':
             do_daily_report = True
