@@ -19,7 +19,7 @@ port = 25
 smtp_server = SMTP('smtp.phiresearchlab.org')
 from_address = 'informaticslab@phiresearchlab.org'
 to_addresses = ['gsledbetter@gmail.com', 'tgsavel@gmail.com', 'Hkr3@cdc.gov', 'pwhitebe@gmail.com',
-                'informaticslab@cdc.gov','ladale@gmail.com']
+                'informaticslab@cdc.gov', 'ladale@gmail.com']
 
 #to_addresses = ['gsledbetter@gmail.com']
 
@@ -114,13 +114,13 @@ def get_site_status(url):
             return 'UP'
     except urllib2.URLError as e:
         if hasattr(e, 'reason'):
-            print 'We failed to reach a server.'
+            logging.error('Failed to reach the server at %s.' % url)
             print 'Reason: ', e.reason
         elif hasattr(e, 'code'):
-            print 'The server could not fulfill the request.'
-            print 'Error code: ', e.code
+            logging.error('The server could not fulfill the request.')
+            logging.error('Error code: ' + e.code)
     else:
-        print 'Status code = %d for URL %s ' % (status_code, url)
+        logging.info('Status code = %d for URL %s ' % (status_code, url))
 
     return 'DOWN'
 
@@ -232,14 +232,14 @@ def get_apc_battery_temp():
     shell_command = snmp_get + ' -v ' + version + ' -c ' + community + ' -Ov ' + apc_nmc + ' ' + battery_oid
 
     shell_command_output = commands.getoutput(shell_command).split()
-    print("shell_command_output = " + shell_command_output[0])
+    # print("shell_command_output = " + shell_command_output[0])
     if shell_command_output[0].startswith("Gauge32"):
         temp_string = shell_command_output[1]
 
         # divide high precision temp by 10 since 28.2 is stored as 282
         temp_celsius = int(temp_string) / 10.0
         temp_fahrenheit = 9.0/5.0 * temp_celsius + 32
-        print "APC Battery Temp = %.1f Fahrenheit, %.1f Celsius" % (temp_fahrenheit, temp_celsius)
+        logging.info("APC Battery Temp = %.1f Fahrenheit, %.1f Celsius" % (temp_fahrenheit, temp_celsius))
     return temp_fahrenheit
 
 
