@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
 
 import socket
 import pickle
@@ -115,7 +115,7 @@ def get_site_status(url):
     except urllib2.URLError as e:
         if hasattr(e, 'reason'):
             logging.error('Failed to reach the server at %s.' % url)
-            print 'Reason: ', e.reason
+            logging.error('Reason: ' + e.reason)
         elif hasattr(e, 'code'):
             logging.error('The server could not fulfill the request.')
             logging.error('Error code: ' + e.code)
