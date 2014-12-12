@@ -21,6 +21,8 @@ from_address = 'informaticslab@phiresearchlab.org'
 to_addresses = ['gsledbetter@gmail.com', 'tgsavel@gmail.com', 'Hkr3@cdc.gov', 'pwhitebe@gmail.com',
                 'informaticslab@cdc.gov','ladale@gmail.com']
 
+#to_addresses = ['gsledbetter@gmail.com']
+
 # list of URLs to monitor
 urls = ['www.phiresearchlab.org',
         'www.phiresearchlab.org/applab',
@@ -104,13 +106,22 @@ class TemperatureAlertEmail(Email):
 
 
 def get_site_status(url):
+    req = urllib2.Request(url)
     try:
-        url_file = urllib2.urlopen(url)
+        url_file = urllib2.urlopen(req)
         status_code = url_file.code
         if status_code in (200, 302):
             return 'UP'
-    except urllib2.URLError:
-        pass
+    except urllib2.URLError as e:
+        if hasattr(e, 'reason'):
+            print 'We failed to reach a server.'
+            print 'Reason: ', e.reason
+        elif hasattr(e, 'code'):
+            print 'The server could not fulfill the request.'
+            print 'Error code: ', e.code
+    else:
+        print 'Status code = %d for URL %s ' % (status_code, url)
+
     return 'DOWN'
 
 
@@ -276,6 +287,10 @@ def main(argv):
     socket.setdefaulttimeout(timeout)
 
     do_daily_report = False
+
+    logging.basicConfig(level=logging.WARNING, filename='sitemon.log',
+                        format='%(asctime)s %(levelname)s: %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
 
     try:
         opts, args = getopt.getopt(argv, "hd",)
