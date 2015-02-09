@@ -14,6 +14,9 @@ import getopt
 import logging
 
 
+# Temperature monitoring constants
+temp_change_sensitivity = 2.0
+
 # SMTP settings
 port = 25
 smtp_server = SMTP('smtp.phiresearchlab.org')
@@ -89,7 +92,7 @@ class TemperatureAlertEmail(Email):
 
     def __init__(self):
         Email.__init__(self)
-        self.intro = 'The temperature of the APC internal battery in the server room has changed by 1 degree or more as stated below:'
+        self.intro = 'The temperature of the APC internal battery in the server room has changed by ' + str(temp_change_sensitivity) + ' degree(s) or more as stated below:'
         self.subject = 'IIU SiteMonitor Server Room APC Internal Battery Temperature Alert'
 
     def add_temp_change(self, new_temp, old_temp):
@@ -268,7 +271,7 @@ def compare_temp_status(prev_results, temp_alert_email):
 
     else:
         previous_stored_temp = prev_results[temp_key]['value']
-        if (temp > previous_stored_temp + 1.0) or (temp < previous_stored_temp - 1.0):
+        if (temp > previous_stored_temp + temp_change_sensitivity) or (temp < previous_stored_temp - temp_change_sensitivity):
             temp_alert_email.add_temp_change(temp, prev_results[temp_key]['value'])
 
             # Save results for later pickling and utility use
