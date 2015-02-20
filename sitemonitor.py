@@ -13,12 +13,19 @@ import sys
 import getopt
 import logging
 
+from logging.handlers import RotatingFileHandler
+
 
 # Temperature monitoring constants
 temp_change_sensitivity = 2.0
 
+# pickle data file
+pickle_data_file = 'sitemon-data.pkl'
+log_file_path = 'sitemon.log'
+
 # SMTP settings
 port = 25
+
 smtp_server = SMTP('smtp.phiresearchlab.org')
 from_address = 'informaticslab@phiresearchlab.org'
 to_addresses = ['gsledbetter@gmail.com', 'tgsavel@gmail.com', 'Hkr3@cdc.gov', 'pwhitebe@gmail.com',
@@ -52,6 +59,14 @@ class Email(object):
         self.need_to_send = True
 
     def send(self):
+        if self.need_to_send is True:
+            email_message = 'To: %s\r\nFrom: %s\r\nSubject: %s\n%s\n%s' % (", ".join(to_addresses), from_address,
+                                                                           self.subject, self.intro, self.body)
+            return smtp_server.sendmail(from_address, to_addresses,  email_message), smtp_server.quit
+        else:
+            return
+
+    def production_send(self):
         if self.need_to_send is True:
             email_message = 'To: %s\r\nFrom: %s\r\nSubject: %s\n%s\n%s' % (", ".join(to_addresses), from_address,
                                                                            self.subject, self.intro, self.body)
@@ -172,7 +187,7 @@ def get_url_status(url, daily_email):
 
     # Email status messages
     daily_email.add_server_status(friendly_status)
-    # logging.warning(status)
+    logging.info(friendly_status)
     return
 
 
@@ -291,9 +306,14 @@ def main(argv):
 
     do_daily_report = False
 
-    logging.basicConfig(level=logging.WARNING, filename='sitemon.log',
+    logging.basicConfig(level=logging.INFO, filename=log_file_path,
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
+    logger = logging.getLogger("Rotating Log")
+
+    # add a rotating handler
+    handler = RotatingFileHandler(log_file_path, maxBytes=2*1024*1024, backupCount=5)
+    logger.addHandler(handler)
 
     try:
         opts, args = getopt.getopt(argv, "hd",)
@@ -310,13 +330,16 @@ def main(argv):
     urls = map(normalize_url, urls)
 
     if do_daily_report is True:
+        logging.info('Starting sitemonitor daily report.....')
         daily_email = DailyEmail()
         [get_url_status(url, daily_email) for url in urls]
         add_temp_to_daily_report(daily_email)
         daily_email.send()
     else:
+        logging.info('Starting sitemonitor frequent interval report.....')
+
         # load previous data
-        pickle_file = 'data.pkl'
+        pickle_file = pickle_data_file
         pickle_data = load_old_results(pickle_file)
 
         # add some metadata to pickle
@@ -329,7 +352,7 @@ def main(argv):
             [compare_site_status(url, pickle_data, server_alert) for url in urls]
             server_alert.send()
         else:
-            logging.error('.')
+            logging.error('The internet is not reachable.')
 
         # check temperature and send alert if necessary
         temp_alert_email = TemperatureAlertEmail()
