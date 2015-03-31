@@ -29,7 +29,7 @@ port = 25
 smtp_server = SMTP('smtp.phiresearchlab.org')
 from_address = 'informaticslab@phiresearchlab.org'
 to_addresses = ['gsledbetter@gmail.com', 'tgsavel@gmail.com', 'Hkr3@cdc.gov', 'pwhitebe@gmail.com',
-                'informaticslab@cdc.gov', 'ladale@gmail.com']
+                'informaticslab@cdc.gov', 'ladale@gmail.com', 'vyf1@cdc.gov']
 
 #to_addresses = ['gsledbetter@gmail.com']
 
