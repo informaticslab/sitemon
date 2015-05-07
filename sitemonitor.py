@@ -17,7 +17,7 @@ from logging.handlers import RotatingFileHandler
 
 
 # Temperature monitoring constants
-temp_change_sensitivity = 2.0
+temp_change_sensitivity = 5.0
 
 # pickle data file
 pickle_data_file = 'sitemon-data.pkl'
