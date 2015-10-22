@@ -29,17 +29,16 @@ port = 25
 smtp_server = SMTP('smtp.phiresearchlab.org')
 from_address = 'informaticslab@phiresearchlab.org'
 to_addresses = ['gsledbetter@gmail.com', 'tgsavel@gmail.com', 'Hkr3@cdc.gov', 'pwhitebe@gmail.com',
-                'informaticslab@cdc.gov', 'ladale@gmail.com', 'vyf1@cdc.gov']
+                'informaticslab@cdc.gov', 'ladale@gmail.com', 'vyf1@cdc.gov', 'fnm1@cdc.gov']
 
 #to_addresses = ['gsledbetter@gmail.com']
 
 # list of URLs to monitor
 urls = ['www.phiresearchlab.org',
-        'www.phiresearchlab.org/applab',
+        'applab.phiresearchlab.org',
         'edemo.phiresearchlab.org',
-        'code.phiresearchlab.org/',
-        'code.phiresearchlab.org/confluence/',
-        'code.phiresearchlab.org/jira',
+        'confluence.phiresearchlab.org/confluence',
+        'jira.phiresearchlab.org/jira',
         'view.phiresearchlab.org']
 
 
@@ -133,10 +132,10 @@ def get_site_status(url):
     except urllib2.URLError as e:
         if hasattr(e, 'reason'):
             logging.error('Failed to reach the server at %s.' % url)
-            logging.error('Reason: ' + e.reason)
+#            logging.error('Reason: ' + e.reason)
         elif hasattr(e, 'code'):
             logging.error('The server could not fulfill the request.')
-            logging.error('Error code: ' + e.code)
+            logging.error('Error code: ' + e.code)		
     else:
         logging.info('Status code = %d for URL %s ' % (status_code, url))
 
@@ -355,9 +354,9 @@ def main(argv):
             logging.error('The internet is not reachable.')
 
         # check temperature and send alert if necessary
-        temp_alert_email = TemperatureAlertEmail()
-        compare_temp_status(pickle_data, temp_alert_email)
-        temp_alert_email.send()
+#        temp_alert_email = TemperatureAlertEmail()
+#        compare_temp_status(pickle_data, temp_alert_email)
+#        temp_alert_email.send()
 
         # store results in pickle file
         store_results(pickle_file, pickle_data)
