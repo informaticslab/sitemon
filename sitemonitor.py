@@ -16,30 +16,15 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 
-# Temperature monitoring constants
-temp_change_sensitivity = 5.0
-
-# pickle data file
-pickle_data_file = 'sitemon-data.pkl'
-log_file_path = 'sitemon.log'
-
-# SMTP settings
-port = 25
-
-smtp_server = SMTP('smtp.phiresearchlab.org')
-from_address = 'informaticslab@phiresearchlab.org'
-to_addresses = ['gsledbetter@gmail.com', 'tgsavel@gmail.com', 'Hkr3@cdc.gov', 'pwhitebe@gmail.com',
-                'informaticslab@cdc.gov', 'ladale@gmail.com', 'vyf1@cdc.gov', 'fnm1@cdc.gov']
-
-#to_addresses = ['gsledbetter@gmail.com']
-
-# list of URLs to monitor
-urls = ['www.phiresearchlab.org',
-        'applab.phiresearchlab.org',
-        'edemo.phiresearchlab.org',
-        'confluence.phiresearchlab.org/confluence',
-        'jira.phiresearchlab.org/jira',
-        'view.phiresearchlab.org']
+import config
+temp_change_sensitivity = config.temp_change_sensitivity
+pickle_data_file = config.pickle_data_file
+log_file_path = config.log_file_path
+port = config.port
+smtp_server = SMTP(config.smtp_server_address)
+from_address = config.from_address
+to_addresses = config.to_addresses
+urls = config.urls
 
 
 class Email(object):
@@ -349,7 +334,7 @@ def main(argv):
         if is_internet_reachable():
             server_alert = ServerAlertEmail()
             [compare_site_status(url, pickle_data, server_alert) for url in urls]
-            server_alert.send()
+           # server_alert.send()
         else:
             logging.error('The internet is not reachable.')
 
