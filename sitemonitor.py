@@ -22,6 +22,9 @@ pickle_data_file = config.pickle_data_file
 log_file_path = config.log_file_path
 port = config.port
 smtp_server = SMTP(config.smtp_server_address)
+smtp_server.set_debuglevel(1)
+smtp_username = config.smtp_username
+smtp_password = config.smtp_password
 from_address = config.from_address
 to_addresses = config.to_addresses
 urls = config.urls
@@ -45,8 +48,8 @@ class Email(object):
     def send(self):
         if self.need_to_send is True:
             email_message = 'To: %s\r\nFrom: %s\r\nSubject: %s\n%s\n%s' % (", ".join(to_addresses), from_address,
-                                                                           self.subject, self.intro, self.body)
-            return smtp_server.sendmail(from_address, to_addresses,  email_message), smtp_server.quit
+                                                                           self.subject, self.intro, self.body) 
+            return smtp_server.starttls(), smtp_server.login(smtp_username, smtp_password),smtp_server.sendmail(from_address, to_addresses,  email_message), smtp_server.quit
         else:
             return
 
@@ -54,7 +57,8 @@ class Email(object):
         if self.need_to_send is True:
             email_message = 'To: %s\r\nFrom: %s\r\nSubject: %s\n%s\n%s' % (", ".join(to_addresses), from_address,
                                                                            self.subject, self.intro, self.body)
-            return smtp_server.sendmail(from_address, to_addresses,  email_message), smtp_server.quit
+        
+            return smtp_server.starttls(), smtp_server.login(smtp_username, smtp_password),smtp_server.sendmail(from_address, to_addresses,  email_message), smtp_server.quit
         else:
             return
 
@@ -120,7 +124,7 @@ def get_site_status(url):
 #            logging.error('Reason: ' + e.reason)
         elif hasattr(e, 'code'):
             logging.error('The server could not fulfill the request.')
-            logging.error('Error code: ' + e.code)		
+            logging.error('Error code: %d' % e.code)		
     else:
         logging.info('Status code = %d for URL %s ' % (status_code, url))
 
@@ -334,7 +338,7 @@ def main(argv):
         if is_internet_reachable():
             server_alert = ServerAlertEmail()
             [compare_site_status(url, pickle_data, server_alert) for url in urls]
-           # server_alert.send()
+            server_alert.send()
         else:
             logging.error('The internet is not reachable.')
 
